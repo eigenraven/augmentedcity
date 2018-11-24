@@ -5,5 +5,6 @@ namespace backend.CityModel
         public string Name { get; set; }
         public string GtfsPath { get; set; }
         public double[] GpsCenter { get; set; }
+        public double[] PlanarScale { get; set; }
     }
 }

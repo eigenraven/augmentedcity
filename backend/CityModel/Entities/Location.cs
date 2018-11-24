@@ -13,7 +13,7 @@ namespace backend.CityModel.Entities
         static readonly double EarthR = (EarthA + EarthB) / 2.0;
 
         static double CenterLatitude, CenterLongitude;
-        static double[] NorthV3, EastV3;
+        static double[] NorthV3, EastV3, Scale2;
         static double[] CenterPosition; // in ECEF coordinates
         public float XOffset { get; set; }
         public float YOffset { get; set; }
@@ -24,8 +24,9 @@ namespace backend.CityModel.Entities
             YOffset = y;
         }
 
-        public static void InitializeCenter(double Latitude, double Longitude)
+        public static void InitializeCenter(double Latitude, double Longitude, double[] scale2)
         {
+            Scale2 = scale2;
             CenterLatitude = 0.0;
             CenterLongitude = 0.0;
 
@@ -80,7 +81,7 @@ namespace backend.CityModel.Entities
             x = dot(P, EastV3);
             y = dot(P, NorthV3);
 
-            return new Location { XOffset = (float)x, YOffset = (float)y };
+            return new Location { XOffset = (float)(x * Scale2[0]), YOffset = (float)(y * Scale2[1]) };
         }
     }
 }
