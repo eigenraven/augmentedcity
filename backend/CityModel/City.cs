@@ -11,7 +11,7 @@ namespace backend.CityModel
             this.Config = cfg;
             Entities.Location.InitializeCenter(cfg.GpsCenter[0], cfg.GpsCenter[1], cfg.PlanarScale);
             GtfsModel = new GtfsModel(cfg.GtfsPath);
-            MovingGridModel = new MovingGridModel();
+            MovingGridModel = new MovingGridModel(cfg.GridIdPath, cfg.GridDataPath);
         }
     }
 }
