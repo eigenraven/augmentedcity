@@ -15,7 +15,8 @@ namespace backend.CityModel.Entities
         static double CenterLatitude, CenterLongitude;
         static double[] NorthV3, EastV3;
         static double[] CenterPosition; // in ECEF coordinates
-        float XOffset, YOffset;
+        public float XOffset { get; set; }
+        public float YOffset { get; set; }
 
         public Location(float x, float y)
         {
