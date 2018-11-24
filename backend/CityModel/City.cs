@@ -6,6 +6,7 @@ namespace backend.CityModel
 
         public void Configure(Config cfg)
         {
+            Entities.Location.InitializeCenter(cfg.GpsCenter[0], cfg.GpsCenter[1]);
             GtfsModel = new GtfsModel(cfg.GtfsPath);
         }
     }
