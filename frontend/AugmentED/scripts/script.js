@@ -22,7 +22,7 @@ texs[1].url = getTimeURL(1)
 // Lol this crashy
 Diagnostics.watch("animationCompleted", Patches.getScalarValue('animationCompleted'))
 
-textNode.text = Patches.getScalarValue('animationCompleted')//.format("{02}")
+// textNode.text = Patches.getScalarValue('animationCompleted')//.format("{02}")
 
 Patches.getScalarValue('animationCompleted').monitor().subscribe((e, a) => {
     Diagnostics.log("Animation completed")
@@ -33,7 +33,7 @@ Patches.getScalarValue('animationCompleted').monitor().subscribe((e, a) => {
         s = "0" + s;
     }
 
-    // textNode.text = s + ":00";
+    textNode.text = s + ":00";
     texs = texs.reverse();
 
     texs[1].url = getTimeURL(e.newValue);
