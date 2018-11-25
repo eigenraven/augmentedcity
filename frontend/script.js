@@ -9,31 +9,43 @@ var Materials = require('Materials');
 var Patches = require('Patches');
 var Reactive = require('Reactive')
 
+
+const textNode = Scene.root.find('clockText');
+
 var reverse = false;
 
-var texs = [Textures.get('current_texture'), Textures.get('next_texture')];
 var preload_time = 1;
-var url = "https://htest.eshc.coop/api/city/heatmap/" + preload_time + ".jpg";
-texs[1].url = url
+const getTimeURL = time => "https://htest.eshc.coop/api/city/heatmap/" + time + ".jpg";
+
+var texs = [Textures.get('current_texture'), Textures.get('next_texture')];
+
+texs[1].url = getTimeURL(preload_time)
+
+Patches.getPulseValue('animationCompleted').subscribe(e => {
+    Diagnostics.log("Animation completed.")
+
+    let s = preload_time+"";
+    if (preload_time < 10) {
+        s = "0" + s;
+    }
+
+    textNode.text = s + ":00";
+    texs = texs.reverse();
+    preload_time += 2;
+    if (preload_time >= 24) {
+        preload_time = 0;
+    }
+    texs[1].url = getTimeURL(preload_time);
+})
 
 const interval = () => {
-    if (reverse) {
-        Patches.setPulseValue("triggerBlendAnimationReverse", Reactive.once());
-        reverse = false;
-    } else {
-        Patches.setPulseValue("triggerBlendAnimation", Reactive.once());
-        reverse = true;
-    }
-    Patches.getPulseValue('animationCompleted').subscribe(function (e) {
-        texs = texs.reverse();
-        preload_time += 1;
-        if (preload_time == 24) {
-            preload_time = 0;
-        }
-        url = "https://htest.eshc.coop/api/city/heatmap/" + preload_time + ".jpg";
-        texs[1].url = url
-    })
+    const key = reverse ? "triggerBlendAnimationReverse" : "triggerBlendAnimation";
+    Diagnostics.log("Trigger " + key)
+    Patches.setPulseValue(key, Reactive.once());
+    reverse = !reverse;
 }
 
-interval()
-Time.setInterval(interval, 5000);
+// Time.setTimeout(() => {
+    // interval()
+    Time.setInterval(interval, 1750);
+// }, 1000);
