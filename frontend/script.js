@@ -12,40 +12,45 @@ var Reactive = require('Reactive')
 
 const textNode = Scene.root.find('clockText');
 
-var reverse = false;
-
 var preload_time = 1;
 const getTimeURL = time => "https://htest.eshc.coop/api/city/heatmap/" + time + ".jpg";
 
 var texs = [Textures.get('current_texture'), Textures.get('next_texture')];
 
-texs[1].url = getTimeURL(preload_time)
+texs[1].url = getTimeURL(1)
 
-Patches.getPulseValue('animationCompleted').subscribe(e => {
-    Diagnostics.log("Animation completed.")
+// Lol this crashy
+Diagnostics.watch("animationCompleted", Patches.getScalarValue('animationCompleted'))
 
-    let s = preload_time+"";
-    if (preload_time < 10) {
+textNode.text = Patches.getScalarValue('animationCompleted')//.format("{02}")
+
+Patches.getScalarValue('animationCompleted').monitor().subscribe((e, a) => {
+    Diagnostics.log("Animation completed")
+    Diagnostics.log(e.newValue)
+
+    let s = e.newValue+"";
+    if (e.newValue < 10) {
         s = "0" + s;
     }
 
-    textNode.text = s + ":00";
+    // textNode.text = s + ":00";
     texs = texs.reverse();
-    preload_time += 2;
-    if (preload_time >= 24) {
-        preload_time = 0;
-    }
-    texs[1].url = getTimeURL(preload_time);
+
+    texs[1].url = getTimeURL(e.newValue);
 })
 
-const interval = () => {
-    const key = reverse ? "triggerBlendAnimationReverse" : "triggerBlendAnimation";
-    Diagnostics.log("Trigger " + key)
-    Patches.setPulseValue(key, Reactive.once());
-    reverse = !reverse;
-}
 
+
+// const interval = () => {
+//     const key = reverse ? "triggerBlendAnimationReverse" : "triggerBlendAnimation";
+//     Diagnostics.log("Trigger " + key)
+//     Patches.setPulseValue(key, Reactive.once());
+
+//     reverse = !reverse;
+// }
+
+// Time.ms.interval(1750).subscribe(interval);
 // Time.setTimeout(() => {
     // interval()
-    Time.setInterval(interval, 1750);
+    // Time.setInterval(interval, 1750);
 // }, 1000);
