@@ -87,8 +87,8 @@ namespace backend.Controllers
                     Y = Math.Clamp(Y, 0, img.Height);
                     float hue = (float)Math.Pow(mgm.TimeSeries[index, closestI] / (double)(0.8 * mgm.MaxActivity), 0.7);
                     hue = Math.Clamp(hue, 0, 1);
-                    float rhue = 120.0f - hue * 140.0f;
-                    Rgb rgb = _ColorSpaceConverter.ToRgb(new Hsv(rhue, rhue < 50.0f ? 0.9f : 0.5f, 1.0f));
+                    float rhue = Math.Max(120.0f - hue * 170.0f, 0.0f);
+                    Rgb rgb = _ColorSpaceConverter.ToRgb(new Hsv(rhue, rhue < 50.0f ? 1.0f : 0.5f, 1.0f));
                     //Rgb rgb = new Rgb(0.0f, hue, 0.0f);
                     img[x, y] = new Rgba32(rgb.ToVector3());
                 }
