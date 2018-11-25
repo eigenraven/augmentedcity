@@ -28,9 +28,8 @@ namespace backend.Controllers
         public CityController(IOptions<CityModel.City> model)
         {
             _Model = model.Value;
-            _PngEncoder.BitDepth = PngBitDepth.Bit8;
-            _PngEncoder.ColorType = PngColorType.RgbWithAlpha;
-            _PngEncoder.CompressionLevel = 6;
+            _PngEncoder.ColorType = PngColorType.Rgb;
+            _PngEncoder.CompressionLevel = 7;
         }
 
         [HttpGet]
@@ -51,15 +50,23 @@ namespace backend.Controllers
             return _Model.GtfsModel.Routes;
         }
 
-        [HttpGet("heatmap/{index}")]
+        [HttpGet("heatmap/{index}.png")]
         public IActionResult GetHeatmap(int index)
         {
             if (index < 0 || index > 23)
             {
                 return NotFound();
             }
-            var img = new Image<Rgba32>(48, 48);
+            var img = new Image<Rgb24>(256, 256);
             var mgm = _Model.MovingGridModel;
+
+            for (int y = 0; y < img.Height; y++)
+            {
+                for (int x = 0; x < img.Width; x++)
+                {
+                    img[x, y] = new Rgb24(32, 32, 200);
+                }
+            }
 
             for (int i = 0; i < mgm.TimeSeries.GetLength(1); i++)
             {
@@ -69,8 +76,8 @@ namespace backend.Controllers
                 X = Math.Clamp(X, -img.Width / 2, img.Width / 2 - 1) + img.Width / 2;
                 Y = Math.Clamp(Y, -img.Height / 2, img.Height / 2 - 1) + img.Height / 2;
                 float hue = (float)mgm.TimeSeries[index, i] / (float)mgm.MaxActivity;
-                Rgb rgb = _ColorSpaceConverter.ToRgb(new Hsv(120.0f - hue*110.0f, 0.8f, 0.9f));
-                img[(int)X, (int)Y] = new Rgba32(rgb.ToVector3());
+                Rgb rgb = _ColorSpaceConverter.ToRgb(new Hsv(120.0f - hue * 110.0f, 0.8f, 0.9f));
+                img[(int)X, (int)Y] = new Rgb24((byte)(rgb.R * 255.0f), (byte)(rgb.G * 255.0f), (byte)(rgb.B * 255.0f));
             }
 
             var ms = new MemoryStream();
