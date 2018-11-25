@@ -47,6 +47,7 @@ namespace backend.CityModel
             dataFile.ReadLine();
             TimeSeries = new long[24, CellDefs.Count];
             MaxActivity = 1;
+            int lines = 0;
             while ((line = dataFile.ReadLine()) != null)
             {// dominant_zone,time,count
              // 10,16.5.2018 15.00.00,2516
@@ -63,8 +64,11 @@ namespace backend.CityModel
                 {
                     MaxActivity = TimeSeries[hour, cindex];
                 }
+                lines++;
             }
             Console.WriteLine("Done loading MovingGridModel");
+            Console.WriteLine("Max activity: " + MaxActivity);
+            Console.WriteLine("People scale maximum: " + MaxActivity / 30.0f);
         }
     }
 }

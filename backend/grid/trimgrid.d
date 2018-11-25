@@ -32,7 +32,7 @@ void main()
         C.lon /= 4.0;
         double Dlat = fabs(C.lat - 60.164926);
         double Dlon = fabs(C.lon - 24.939405);
-        if (Dlat > 0.02 || Dlon > 0.2)
+        if (Dlat > 0.12 || Dlon > 0.22)
         {
             continue;
         }

@@ -13,7 +13,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.ColorSpaces;
 using SixLabors.ImageSharp.ColorSpaces.Conversion;
-using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace backend.Controllers
 {
@@ -22,14 +22,14 @@ namespace backend.Controllers
     public class CityController : ControllerBase
     {
         private readonly CityModel.City _Model;
-        private PngEncoder _PngEncoder = new PngEncoder();
         private ColorSpaceConverter _ColorSpaceConverter = new ColorSpaceConverter();
+        private JpegEncoder _JpegEncoder = new JpegEncoder();
 
-        public CityController(IOptions<CityModel.City> model)
+        public CityController(CityModel.City model)
         {
-            _Model = model.Value;
-            _PngEncoder.ColorType = PngColorType.Rgb;
-            _PngEncoder.CompressionLevel = 7;
+            _Model = model;
+            _JpegEncoder.Quality = 100;
+            _JpegEncoder.Subsample = JpegSubsample.Ratio444;
         }
 
         [HttpGet]
@@ -50,41 +50,54 @@ namespace backend.Controllers
             return _Model.GtfsModel.Routes;
         }
 
-        [HttpGet("heatmap/{index}.png")]
+        [HttpGet("heatmap/{index}.jpg")]
         public IActionResult GetHeatmap(int index)
         {
             if (index < 0 || index > 23)
             {
                 return NotFound();
             }
-            var img = new Image<Rgb24>(256, 256);
+            var img = new Image<Rgba32>(64, 64);
             var mgm = _Model.MovingGridModel;
 
             for (int y = 0; y < img.Height; y++)
             {
                 for (int x = 0; x < img.Width; x++)
                 {
-                    img[x, y] = new Rgb24(32, 32, 200);
+                    int closestI = 0;
+                    float clsD = 1.0e6f;
+                    MovingGridModel.CellDef CD;
+                    float X, Y;
+                    for (int i = 1; i < mgm.TimeSeries.GetLength(1); i++)
+                    {
+                        CD = mgm.CellDefs[i];
+                        X = (CD.Location.XOffset + 0.5f) * img.Width;
+                        Y = (CD.Location.YOffset + 0.5f) * img.Height;
+                        float ND = (X - x) * (X - x) + (Y - y) * (Y - y);
+                        if (ND < clsD)
+                        {
+                            clsD = ND;
+                            closestI = i;
+                        }
+                    }
+                    CD = mgm.CellDefs[closestI];
+                    X = (CD.Location.XOffset + 0.5f) * img.Width;
+                    Y = (CD.Location.YOffset + 0.5f) * img.Height;
+                    X = Math.Clamp(X, 0, img.Width);
+                    Y = Math.Clamp(Y, 0, img.Height);
+                    float hue = (float)Math.Pow(mgm.TimeSeries[index, closestI] / (double)(0.8 * mgm.MaxActivity), 0.7);
+                    hue = Math.Clamp(hue, 0, 1);
+                    Rgb rgb = _ColorSpaceConverter.ToRgb(new Hsv(120.0f - hue * 110.0f, 0.8f, 0.9f));
+                    //Rgb rgb = new Rgb(0.0f, hue, 0.0f);
+                    img[x, y] = new Rgba32(rgb.ToVector3());
                 }
             }
 
-            for (int i = 0; i < mgm.TimeSeries.GetLength(1); i++)
-            {
-                MovingGridModel.CellDef CD = mgm.CellDefs[i];
-                float X = CD.Location.XOffset * 40.0f;
-                float Y = CD.Location.YOffset * 40.0f;
-                X = Math.Clamp(X, -img.Width / 2, img.Width / 2 - 1) + img.Width / 2;
-                Y = Math.Clamp(Y, -img.Height / 2, img.Height / 2 - 1) + img.Height / 2;
-                float hue = (float)mgm.TimeSeries[index, i] / (float)mgm.MaxActivity;
-                Rgb rgb = _ColorSpaceConverter.ToRgb(new Hsv(120.0f - hue * 110.0f, 0.8f, 0.9f));
-                img[(int)X, (int)Y] = new Rgb24((byte)(rgb.R * 255.0f), (byte)(rgb.G * 255.0f), (byte)(rgb.B * 255.0f));
-            }
-
             var ms = new MemoryStream();
-            _PngEncoder.Encode(img, ms);
+            img.SaveAsJpeg(ms, _JpegEncoder);
             byte[] arr = ms.ToArray();
             ms.Close();
-            return File(arr, "image/png");
+            return File(arr, "image/jpeg");
         }
     }
 }

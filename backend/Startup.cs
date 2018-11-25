@@ -32,17 +32,16 @@ namespace backend
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
-                .AddApplicationPart(typeof(Startup).Assembly);
-            services.Configure<City>(modelSetup =>
-            {
-                var cityConfig = Configuration.GetSection("City").Get<Config>();
-                modelSetup.Configure(cityConfig);
-            });
             services.Configure<ForwardedHeadersOptions>(options =>
             {
                 options.KnownProxies.Add(IPAddress.Parse("10.10.10.4"));
             });
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddApplicationPart(typeof(Startup).Assembly);
+            var cityConfig = Configuration.GetSection("City").Get<Config>();
+            City city = new City();
+            city.Configure(cityConfig);
+            services.AddSingleton(city);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
