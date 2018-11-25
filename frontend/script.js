@@ -16,7 +16,7 @@ var preload_time = 1;
 var url = "https://htest.eshc.coop/api/city/heatmap/" + preload_time + ".jpg";
 texs[1].url = url
 
-Time.setInterval(() => {
+const interval = () => {
     if (reverse) {
         Patches.setPulseValue("triggerBlendAnimationReverse", Reactive.once());
         reverse = false;
@@ -33,4 +33,7 @@ Time.setInterval(() => {
         url = "https://htest.eshc.coop/api/city/heatmap/" + preload_time + ".jpg";
         texs[1].url = url
     })
-}, 5000);
+}
+
+interval()
+Time.setInterval(interval, 5000);
